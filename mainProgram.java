@@ -1,5 +1,7 @@
 import java.awt.*; //only necessary imports which allow for GUIS, GUI events, GUI objects and random numbers
 import java.awt.event.*;
+import java.time.temporal.TemporalAdjuster;
+
 import javax.swing.*;
 import java.util.*;
 public class mainProgram extends JFrame
@@ -20,6 +22,7 @@ public class mainProgram extends JFrame
 
     JButton inputDataButto = new JButton();
 
+    String userName, userTime, userPrio;
 
     public mainProgram()
     {
@@ -61,6 +64,30 @@ public class mainProgram extends JFrame
 
     boolean validateEvent(String[] newEvent)
     {
+        int tempIntHours, tempIntMinutes;
+        if(userName != null)
+        {
+            try
+            {
+                tempIntHours = Integer.parseInt(userTime.substring(0, 2));
+                tempIntMinutes = Integer.parseInt(userTime.substring(3, 5));
+            }
+            catch(Exception e)
+            {
+                return false;
+            }
+            if(userTime.substring(2, 3).equals(":"))
+            {
+                if(tempIntHours > 24 || tempIntHours < 0)
+                {
+                    return false;
+                }
+                else if(tempIntMinutes > 60 || tempIntMinutes < 0)
+                {
+                    return false;
+                }
+            }
+        }
         return true;
     }
 
@@ -93,12 +120,12 @@ public class mainProgram extends JFrame
         return tempData;
     }
 
-    String changeTime(String initTime, String timeChange)
+    String changeTime(String initTime, int timeChange)
     {
         int oldHours = Integer.parseInt(initTime.substring(0, 1));
         int oldMinutes = Integer.parseInt(initTime.substring(3, 4));
-        int minutes = Integer.parseInt(timeChange) % 60;
-        int hours = (Integer.parseInt(timeChange) - minutes) / 60;
+        int minutes = timeChange % 60;
+        int hours = (timeChange - minutes) / 60;
         if((oldMinutes + minutes) > 60)
         {
             minutes = minutes - 60;
@@ -109,10 +136,12 @@ public class mainProgram extends JFrame
             minutes = minutes - 40;
             hours = hours - 1;
         }
+        if(hours > 24)
+        {
+            hours = hours - 24;
+        }
         return(Integer.toString(oldHours + hours) + ":" + Integer.toString(oldMinutes + minutes));
     }
-
-
     public static void main(String[] args)
     {
         guiLoader.mainProgramGUI();
