@@ -7,6 +7,7 @@ import javax.swing.*;
 import javax.swing.table.TableModel;
 
 import java.util.*;
+import java.util.concurrent.CompletionException;
 
 public class mainProgram extends JFrame {
     String[] colNames = { "Act Name", "Length", "Start Time", "Priority" };
@@ -57,48 +58,23 @@ public class mainProgram extends JFrame {
         inputDataButton.addActionListener(actionEvent -> {
             String[] tempArray = { actNameText.getText(), actLenText.getText(), "", priorityText.getText() };
             if (validateEvent(tempArray)) {
-                rawData[rawDataLength] = tempArray;
-                System.out.println("NOTE rawdatalength: " + rawDataLength);
-                System.out.println(rawData[rawDataLength][0]);
-                System.out.println(rawData[rawDataLength][1]);
-                System.out.println(rawData[rawDataLength][2]);
-                System.out.println(rawData[rawDataLength][3]);
+
+                    rawData[rawDataLength] = tempArray;
                 rawDataLength++;
-                System.out.println("PRINTING THE ARRY___________________________________");
-                printArray(rawData);
                 String[][] tempOrderData = orderData();
                 for (int i = 0; i < rawDataLength; i++) {
                     for (int j = 0; j < completeData[i].length; j++) {
                         completeData[i][j] = tempOrderData[i][j];
                     }
                 }
-                System.out.println("PRINTING UPDATED ARRAY");
-                printArray(completeData);
-                //completeData = orderData();
-                System.out.println("rawdatalength: " + rawDataLength);
-                System.out.println(completeData[rawDataLength - 1][0]);
-                System.out.println(completeData[rawDataLength - 1][1]);
-                System.out.println(completeData[rawDataLength - 1][2]);
-                System.out.println(completeData[rawDataLength - 1][3]);
-                System.out.println("test1: " + orderData()[rawDataLength - 1][0]);
-                // System.out.println("test2: " + orderData()[rawDataLength-1][1]);
-                // System.out.println("test3: " + orderData()[rawDataLength-1][2]);
-                // System.out.println("test4: " + orderData()[rawDataLength-1][3]);
-                // System.out.println("Attemping repaint");
+                for(int k = 0; k < rawDataLength; k++)
+                {
+                    completeData[k][2] = minToTime(completeData[k][2]);
+                }
                 table.repaint();
             }
         });
 
-        /*
-         * rawData[0][0] = "Test";
-         * rawData[0][1] = "20";
-         * rawData[0][2] = "780";
-         * rawData[0][3] = "1";
-         * 
-         * completeData = rawData;
-         * completeData[0][0] = "Test";
-         */
-        System.out.println("complete data [0][2]: " + completeData[0][2]);
         highPrioIndex = 0;
         rawDataLength++;
 
@@ -110,24 +86,16 @@ public class mainProgram extends JFrame {
     }
 
     String[][] orderData() {
-        System.out.println("starting orderdata");
         int highPrioIndex = getIndexOfHighestPriority(rawData)[0];
         int currentPrio = getIndexOfHighestPriority(rawData)[1];
         String currentEarliestTime = (rawData[highPrioIndex][2]);
         String currentLatestTime = Integer.toString(Integer.parseInt(rawData[highPrioIndex][2]) + Integer.parseInt(rawData[highPrioIndex][1]));
-        System.out.println("EarliestTime: " + currentEarliestTime);
-        System.out.println("LatestTime: " + currentLatestTime);
         int numPrioSearched = 1;
         int[] earlierPriorities = new int[20];
         int[] laterPriorities = new int[20];
         int highPrioFinalPos = 0;
         int currentLength, numEarlyPrio = 0, numLatePrio = 0;
-        System.out.println("raw data length: " + rawDataLength);
         while (numPrioSearched != rawDataLength) {
-            // System.out.println(numPrioSearched + ", " + rawDataLength);
-            // System.out.println("Integer.toString(currentPrio + 1: " +
-            // Integer.toString(currentPrio + 1));
-            System.out.println("highPrioIndex: " + highPrioIndex);
             if (getIndexOfPriority(Integer.toString(currentPrio + 1)) != -1) {
                 if (furtherTime(rawData[highPrioIndex][2], currentEarliestTime, currentLatestTime)) {
                     laterPriorities[numLatePrio] = getIndexOfPriority(Integer.toString(currentPrio + 1));
@@ -140,31 +108,22 @@ public class mainProgram extends JFrame {
                 }
                 numPrioSearched++;
                 currentLength = Integer.parseInt(rawData[getIndexOfPriority(Integer.toString(currentPrio + 1))][1]);
-            } else {
-                // System.out.println("Did else");
             }
             currentPrio++;
-            System.out.println("Number of events before: " + numEarlyPrio);
-            System.out.println("Number of events after: " + numLatePrio);
         }
-        currentEarliestTime = (rawData[highPrioIndex][2]);
-        currentLatestTime = Integer
-                .toString(Integer.parseInt(rawData[highPrioIndex][2]) + Integer.parseInt(rawData[highPrioIndex][1]));
+        currentEarliestTime = Integer.toString(Integer.parseInt((rawData[highPrioIndex][2])) - 10);
+        currentLatestTime = Integer.toString(Integer.parseInt(rawData[highPrioIndex][2]) + Integer.parseInt(rawData[highPrioIndex][1]) + 10);
         String[][] updatedData = new String[40][4];
         updatedData[numEarlyPrio] = rawData[highPrioIndex];
         highPrioIndex = highPrioIndex + numEarlyPrio;
-        System.out.println("HighPrioIndex: " + highPrioIndex);
-        System.out.println("numEarlyPrio" + numEarlyPrio);
-        System.out.println("numLatePrio" + numLatePrio);
         for (int i = numEarlyPrio; i > 0; i--) {
-            System.out.println("going through the early array");
             updatedData[i - 1] = rawData[earlierPriorities[numEarlyPrio - i]];
+            updatedData[i - 1][1] = Integer.toString(Integer.parseInt(rawData[earlierPriorities[numEarlyPrio - i]][1]));
             updatedData[i - 1][2] = Integer.toString(Integer.parseInt(currentEarliestTime)
                     - Integer.parseInt(rawData[earlierPriorities[numEarlyPrio - i]][1]));
             currentEarliestTime = updatedData[i - 1][2];
         }
         for (int j = 0; j < numLatePrio; j++) {
-            System.out.println("going through the late array");
             updatedData[j + highPrioIndex + 1] = rawData[laterPriorities[j]];
             updatedData[j + highPrioIndex + 1][2] = currentLatestTime;
             currentLatestTime = Integer.toString(
@@ -176,46 +135,36 @@ public class mainProgram extends JFrame {
 
     String minToTime(String minutes) {
         System.out.println("converting time");
+        String time;
         int intMin = Integer.parseInt(minutes); // add 24hr overflow
-        String time = Integer.toString((intMin - (intMin % 60)) / 60) + ":" + Integer.toString(intMin % 60);
+        System.out.println((intMin - (intMin % 60)) / 60);
+        if(((intMin - (intMin % 60)) / 60) > 24)
+        {
+            time = Integer.toString(((intMin - (intMin % 60)) / 60) - 24) + ":" + Integer.toString(intMin % 60);
+        }
+        else{
+            time = Integer.toString((intMin - (intMin % 60)) / 60) + ":" + Integer.toString(intMin % 60);
+        }
+        if ((intMin % 60) == 0) {
+            time = time + "0";
+        }
         System.out.println("time:" + time);
         return time;
     }
 
     boolean furtherTime(String highPrioStart, String earliest, String latest) {
-        System.out.println("Integer.parseInt(highPrioStart): " + Integer.parseInt(highPrioStart));
-        System.out.println("Integer.parseInt(earliest): " + Integer.parseInt(earliest));
-        System.out.println("Integer.parseInt(latest): " + Integer.parseInt(latest));
         int EarlyDiffFromStart = Integer.parseInt(highPrioStart) - Integer.parseInt(earliest);
         int EarlyDiffFromEnd = Integer.parseInt(latest) - Integer.parseInt(highPrioStart);
-        // int EarlyDiffFromEnd = ((Integer.parseInt(latest.substring(0,2)) * 60) +
-        // Integer.parseInt(latest.substring(3,5))) -
-        // ((Integer.parseInt(highPrioStart.substring(0,2)) * 60) +
-        // Integer.parseInt(highPrioStart.substring(3,5)));
-        // int EarlyDiffFromStart = ((Integer.parseInt(highPrioStart.substring(0,2)) *
-        // 60) + Integer.parseInt(highPrioStart.substring(3,5))) -
-        // ((Integer.parseInt(earliest.substring(0,2)) * 60) +
-        // Integer.parseInt(earliest.substring(3,5)));
-        System.out.println("EarlyDiffFromEnd: " + EarlyDiffFromEnd);
-        System.out.println("EarlyDiffFromStart: " + EarlyDiffFromStart);
         if (EarlyDiffFromEnd > EarlyDiffFromStart) {
-            System.out.println("passing false");
             return false;
         }
         else{
-            System.out.println("passing true");
             return true;
         }
     }
 
     int getIndexOfPriority(String val) {
-        // System.out.println(rawDataLength);
         for (int i = 0; i < rawDataLength; i++) {
-            // System.out.println("i: " + i);
-            // System.out.println(rawData[i][0]);
-            // System.out.println(rawData[i][1]);
-            // System.out.println(rawData[i][2]);
-            // System.out.println(rawData[i][3]);
             if (rawData[i][3].equals(val)) {
                 return i;
             }
@@ -231,32 +180,23 @@ public class mainProgram extends JFrame {
         int tempHighPrioIndex = 0;
         int highPrioVal = Integer.parseInt(orderlyData[0][3]);
         for (int i = 0; i < rawDataLength; i++) {
-            System.out.println("index func: " + i + ", " + rawDataLength);
             if (highPrioVal > Integer.parseInt(orderlyData[i][3])) {
                 tempHighPrioIndex = i;
                 highPrioVal = Integer.parseInt(orderlyData[i][3]);
             }
         }
-        System.out.println("temphighprioindex: " + tempHighPrioIndex);
         int[] tempIntArray = { tempHighPrioIndex, highPrioVal };
         return tempIntArray;
     }
 
     boolean validateEvent(String[] newEvent) {
-        System.out.println("validating");
-        System.out.println("name:" + actNameText.getText());
-        System.out.println("length: " + actLenText.getText());
-        System.out.println("priority: " + priorityText.getText());
         if (actNameText.getText().equals("") || actLenText.getText().equals("") || priorityText.getText().equals("")) {
             return false;
         }
         if (Integer.parseInt(priorityText.getText()) <= 0) {
             return false;
         }
-        System.out.println("reached loop");
         for (int i = 0; i < rawDataLength + 1; i++) {
-            System.out.println("userPrio");
-            System.out.println(rawData[i][3]);
             if (priorityText.getText().equals(rawData[i][3])) {
                 return false;
             }
@@ -266,14 +206,12 @@ public class mainProgram extends JFrame {
         } catch (Exception e) {
             return false;
         }
-        System.out.println("returning true");
         return true;
     }
 
     String[][] gapData(String[][] orderlyData) {
         String[][] tempData = new String[40][4];
         int highPrioIndex = getIndexOfHighestPriority(orderlyData)[0];
-        System.out.println("highprioindex: " + highPrioIndex);
         int tempIndex = highPrioIndex;
         for (int i = (highPrioIndex * 2) - 2; i > 0; i = i - 2) {
             tempData[i + 1][0] = "Break";
@@ -290,7 +228,6 @@ public class mainProgram extends JFrame {
         for (int i = 0; i < ((highPrioIndex * 2) - 1); i++) {
             tempData[highPrioIndex + i + 1][0] = "Break";
             tempData[highPrioIndex + i + 1][1] = "10";
-            System.out.println("tempIndex: " + tempIndex);
             tempData[highPrioIndex + i + 1][2] = minToTime(Integer
                     .toString(Integer.parseInt(orderlyData[tempIndex][2]) + (((tempIndex - highPrioIndex) - 1) * 10)));
             tempData[highPrioIndex + i + 1][3] = "0";
@@ -299,7 +236,7 @@ public class mainProgram extends JFrame {
                     Integer.toString(Integer.parseInt(orderlyData[tempIndex][2]) + ((tempIndex - highPrioIndex) * 10)));
             tempIndex = tempIndex + 1;
         }
-        System.out.println("tempdata length:" + tempData.length);
+        printArray(tempData);
         return tempData;
     }
 
