@@ -6,14 +6,14 @@ import javax.swing.*;
 import java.util.*;
 public class mainProgram extends JFrame
 {
-    String[] colNames = {"Act Name", "Prefered Start Time", "Actual Start Time", "Priority"};
-    String[][] orderedData = new String[20][4];
-    String[][] rawData = new String[20][4];
+    String[] colNames = {"Act Name", "Length", "Start Time", "Priority"};
+    String[][] orderedData = new String[20][4]; //{name, length, start time, priority};
+    String[][] rawData = new String[20][4]; //{name, length, blank, priority}
 
     JTable table = new JTable(orderedData, colNames);
 
     JLabel actNameLabel = new JLabel("Act Name");
-    JLabel prefStartLabel = new JLabel("Start Time");
+    JLabel prefStartLabel = new JLabel("Length");
     JLabel priorityLabel = new JLabel("Priority");
     
     JTextArea actNameText = new JTextArea();
@@ -22,7 +22,7 @@ public class mainProgram extends JFrame
 
     JButton inputDataButto = new JButton();
 
-    String userName, userTime, userPrio;
+    String userName, userLength, userPrio;
 
     public mainProgram()
     {
@@ -37,17 +37,46 @@ public class mainProgram extends JFrame
         add(priorityText);
     }
 
-    Object[][] orderData(Object[][] normalData)
+    String[][] orderData(String[][] normalData)
     {
-        return normalData;
+        String[][] updatedData = new String[20][4];
+        int[] priorityTimeOrder = new int[0];
+        int highestPriorityIndex = getIndexOfHighestPriority(rawData)[0];
+        priorityTimeOrder[highestPriorityIndex] = 0;
+        int nextPriority = -1;
+        int prioritiesSearched = 1;
+        int currentPriority = getIndexOfHighestPriority(rawData)[1];
+        while(prioritiesSearched != rawData.length);
+        {
+            //priorityTimeOrder[getIndexOfPriority(Integer.toString(currentPriority - 1))];
+            if(getIndexOfPriority(Integer.toString(currentPriority - 1)) != -1)
+            {
+                currentPriority = currentPriority - 1;
+                //ADD CHECK TIME WHETHER BETTER BEFORE OR AFTER
+                //IF HIGHER PUT ABOVE IN PRIORITY TIME ORDER
+            }
+        }
+        return updatedData;
     }
 
-    int indexOfChange(Object[][] orderedData)
+    int getIndexOfPriority(String val)
+    {
+        for(int i = 0; i < rawData.length; i++)
+        {
+            if(rawData[i][2].equals(val))
+            {
+                return i;
+            }
+        }
+        return -1;
+    }
+
+    int getIndexOfChange(Object[][] orderedData)
     {
         return 0;
     }
 
-    int indexOfHighestPriority(String[][] orderlyData)
+    int[] getIndexOfHighestPriority(String[][] orderlyData)
     {
         int highPrioIndex = 0;
         int highPrioVal = Integer.parseInt(orderlyData[0][3]);
@@ -59,33 +88,26 @@ public class mainProgram extends JFrame
                 highPrioVal = Integer.parseInt(orderlyData[i][3]);
             }
         }
-        return highPrioIndex;
+        int[] tempIntArray = {highPrioIndex, highPrioVal};
+        return tempIntArray;
     }
 
     boolean validateEvent(String[] newEvent)
     {
-        int tempIntHours, tempIntMinutes;
+        int tempLength;
         if(userName != null)
         {
             try
             {
-                tempIntHours = Integer.parseInt(userTime.substring(0, 2));
-                tempIntMinutes = Integer.parseInt(userTime.substring(3, 5));
+                tempLength = Integer.parseInt(userLength);
             }
             catch(Exception e)
             {
                 return false;
             }
-            if(userTime.substring(2, 3).equals(":"))
+            if(Integer.parseInt(userPrio) <= 0)
             {
-                if(tempIntHours > 24 || tempIntHours < 0)
-                {
-                    return false;
-                }
-                else if(tempIntMinutes > 60 || tempIntMinutes < 0)
-                {
-                    return false;
-                }
+                return false;
             }
         }
         return true;
@@ -94,12 +116,12 @@ public class mainProgram extends JFrame
     Object[][] gapData(String[][] orderlyData)
     {
         String[][] tempData = new String[(orderlyData.length * 2) - 1][4];
-        int highPrioIndex = indexOfHighestPriority(orderlyData);
+        int highPrioIndex = getIndexOfHighestPriority(orderlyData)[0];
         int tempIndex = highPrioIndex;
         for(int i = (highPrioIndex * 2) - 2; i > 0; i = i - 2)
         {
             tempData[i + 1][0] = "Break";
-            tempData[i + 1][1] = "N/A";
+            tempData[i + 1][1] = "10";
             tempData[i + 1][2] = changeTime(orderlyData[tempIndex][2], (highPrioIndex - tempIndex) * -10);
             tempData[i + 1][3] = "0";
             tempData[i] = orderlyData[tempIndex];
@@ -110,7 +132,7 @@ public class mainProgram extends JFrame
         for(int i = 0; i < (highPrioIndex * 2) + 2; i++)
         {
             tempData[i - 1][0] = "Break";
-            tempData[i - 1][1] = "N/A";
+            tempData[i - 1][1] = "10";
             tempData[i - 1][2] = changeTime(orderlyData[tempIndex][2], (tempIndex - highPrioIndex) * 10);
             tempData[i - 1][3] = "0";
             tempData[i] = orderlyData[tempIndex];
