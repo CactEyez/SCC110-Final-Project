@@ -64,12 +64,16 @@ public class mainProgram extends JFrame {
                 System.out.println(rawData[rawDataLength][2]);
                 System.out.println(rawData[rawDataLength][3]);
                 rawDataLength++;
+                System.out.println("PRINTING THE ARRY___________________________________");
+                printArray(rawData);
                 String[][] tempOrderData = orderData();
                 for (int i = 0; i < rawDataLength; i++) {
                     for (int j = 0; j < completeData[i].length; j++) {
                         completeData[i][j] = tempOrderData[i][j];
                     }
                 }
+                System.out.println("PRINTING UPDATED ARRAY");
+                printArray(completeData);
                 //completeData = orderData();
                 System.out.println("rawdatalength: " + rawDataLength);
                 System.out.println(completeData[rawDataLength - 1][0]);
@@ -107,10 +111,10 @@ public class mainProgram extends JFrame {
 
     String[][] orderData() {
         System.out.println("starting orderdata");
+        int highPrioIndex = getIndexOfHighestPriority(rawData)[0];
         int currentPrio = getIndexOfHighestPriority(rawData)[1];
         String currentEarliestTime = (rawData[highPrioIndex][2]);
-        String currentLatestTime = Integer
-                .toString(Integer.parseInt(rawData[highPrioIndex][2]) + Integer.parseInt(rawData[highPrioIndex][1]));
+        String currentLatestTime = Integer.toString(Integer.parseInt(rawData[highPrioIndex][2]) + Integer.parseInt(rawData[highPrioIndex][1]));
         System.out.println("EarliestTime: " + currentEarliestTime);
         System.out.println("LatestTime: " + currentLatestTime);
         int numPrioSearched = 1;
@@ -148,15 +152,21 @@ public class mainProgram extends JFrame {
                 .toString(Integer.parseInt(rawData[highPrioIndex][2]) + Integer.parseInt(rawData[highPrioIndex][1]));
         String[][] updatedData = new String[40][4];
         updatedData[numEarlyPrio] = rawData[highPrioIndex];
+        highPrioIndex = highPrioIndex + numEarlyPrio;
+        System.out.println("HighPrioIndex: " + highPrioIndex);
+        System.out.println("numEarlyPrio" + numEarlyPrio);
+        System.out.println("numLatePrio" + numLatePrio);
         for (int i = numEarlyPrio; i > 0; i--) {
+            System.out.println("going through the early array");
             updatedData[i - 1] = rawData[earlierPriorities[numEarlyPrio - i]];
             updatedData[i - 1][2] = Integer.toString(Integer.parseInt(currentEarliestTime)
                     - Integer.parseInt(rawData[earlierPriorities[numEarlyPrio - i]][1]));
             currentEarliestTime = updatedData[i - 1][2];
         }
         for (int j = 0; j < numLatePrio; j++) {
-            updatedData[j + highPrioIndex] = rawData[laterPriorities[j]];
-            updatedData[j + highPrioIndex][2] = currentLatestTime;
+            System.out.println("going through the late array");
+            updatedData[j + highPrioIndex + 1] = rawData[laterPriorities[j]];
+            updatedData[j + highPrioIndex + 1][2] = currentLatestTime;
             currentLatestTime = Integer.toString(
                     Integer.parseInt(currentLatestTime) + Integer.parseInt(updatedData[j + highPrioIndex][1]));
         }
@@ -189,9 +199,11 @@ public class mainProgram extends JFrame {
         System.out.println("EarlyDiffFromEnd: " + EarlyDiffFromEnd);
         System.out.println("EarlyDiffFromStart: " + EarlyDiffFromStart);
         if (EarlyDiffFromEnd > EarlyDiffFromStart) {
+            System.out.println("passing false");
             return false;
         }
         else{
+            System.out.println("passing true");
             return true;
         }
     }
@@ -310,6 +322,17 @@ public class mainProgram extends JFrame {
             return (Integer.toString(oldHours + hours) + ":" + "00");
         }
         return (Integer.toString(oldHours + hours) + ":" + Integer.toString(oldMinutes + minutes));
+    }
+
+    void printArray(String[][] printy)
+    {
+        for(int i = 0; i < rawDataLength; i++)
+        {
+            for(int j = 0; j < 4; j++)
+            {
+                System.out.println("String[" + i + "][" + j + "]: " + printy[i][j]);
+            }
+        }
     }
 
     public static void main(String[] args) {
