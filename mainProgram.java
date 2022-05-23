@@ -7,10 +7,10 @@ import java.util.*;
 public class mainProgram extends JFrame
 {
     String[] colNames = {"Act Name", "Length", "Start Time", "Priority"};
-    String[][] orderedData = new String[20][4]; //{name, length, start time, priority};
-    String[][] rawData = new String[20][4]; //{name, length, blank, priority}
+    //String[][] orderedData = new String[20][4]; //{name, length, start time (in minutes), priority};
+    String[][] rawData = new String[20][4]; //{name, length, blank/start time, priority}
 
-    JTable table = new JTable(orderedData, colNames);
+    JTable table = new JTable(rawData, colNames);
 
     JLabel actNameLabel = new JLabel("Act Name");
     JLabel prefStartLabel = new JLabel("Length");
@@ -39,24 +39,63 @@ public class mainProgram extends JFrame
 
     String[][] orderData(String[][] normalData)
     {
-        String[][] updatedData = new String[20][4];
-        int[] priorityTimeOrder = new int[0];
-        int highestPriorityIndex = getIndexOfHighestPriority(rawData)[0];
-        priorityTimeOrder[highestPriorityIndex] = 0;
-        int nextPriority = -1;
-        int prioritiesSearched = 1;
-        int currentPriority = getIndexOfHighestPriority(rawData)[1];
-        while(prioritiesSearched != rawData.length);
+        int currentPrio = getIndexOfHighestPriority(rawData)[1];
+        String currentEarliestTime = (rawData[getIndexOfHighestPriority(rawData)[0]][2]);
+        String currentLatestTime = Integer.toString(Integer.parseInt(rawData[getIndexOfHighestPriority(rawData)[0]][2]) + Integer.parseInt(rawData[getIndexOfHighestPriority(rawData)[0]][1]));
+        int numPrioSearched = 1;
+        int[] earlierPriorities = new int[20];
+        int[] laterPriorities = new int[20];
+        int highPrioFinalPos = 0;
+        int currentLength, numEarlyPrio = 0, numLatePrio = 0;
+        while(numPrioSearched != rawData.length)
         {
-            //priorityTimeOrder[getIndexOfPriority(Integer.toString(currentPriority - 1))];
-            if(getIndexOfPriority(Integer.toString(currentPriority - 1)) != -1)
+            if(getIndexOfPriority(Integer.toString(currentPrio + 1)) != -1)
             {
-                currentPriority = currentPriority - 1;
-                //ADD CHECK TIME WHETHER BETTER BEFORE OR AFTER
-                //IF HIGHER PUT ABOVE IN PRIORITY TIME ORDER
+                if(furtherTime(rawData[getIndexOfHighestPriority(rawData)[0]][2], currentEarliestTime, currentLatestTime))
+                {
+                    laterPriorities[numLatePrio] = getIndexOfPriority(Integer.toString(currentPrio + 1));
+                    currentLatestTime = Integer.toString(Integer.parseInt(currentLatestTime) + Integer.parseInt(rawData[getIndexOfPriority(Integer.toString(currentPrio + 1))][1]));
+                    numLatePrio++;
+                }
+                else
+                {
+                    earlierPriorities[numEarlyPrio] = getIndexOfPriority(Integer.toString(currentPrio + 1));
+                    currentEarliestTime = Integer.toString(Integer.parseInt(currentEarliestTime) - Integer.parseInt(rawData[getIndexOfPriority(Integer.toString(currentPrio + 1))][1]));
+                    numEarlyPrio++;
+                }
+                numPrioSearched++;
+                currentLength = Integer.parseInt(rawData[getIndexOfPriority(Integer.toString(currentPrio + 1))][1]);
             }
+            currentPrio++;
         }
-        return updatedData;
+        currentEarliestTime = (rawData[getIndexOfHighestPriority(rawData)[0]][2]);
+        currentLatestTime = Integer.toString(Integer.parseInt(rawData[getIndexOfHighestPriority(rawData)[0]][2]) + Integer.parseInt(rawData[getIndexOfHighestPriority(rawData)[0]][1]));
+        String[][] updatedData = new String[numEarlyPrio + numLatePrio + 1][4];
+        updatedData[getIndexOfHighestPriority(rawData)[0]] = rawData[getIndexOfHighestPriority(rawData)[0]];
+        for(int i = numEarlyPrio; i > 0; i--)
+        {
+            updatedData[i - 1] = rawData[earlierPriorities[numEarlyPrio - i]];
+            updatedData[i - 1][2] = Integer.toString(Integer.parseInt(currentEarliestTime) - Integer.parseInt(rawData[earlierPriorities[numEarlyPrio - i]][1]));
+            currentEarliestTime = updatedData[i - 1][2];
+        }
+        for(int j = 0; j < numLatePrio; j++)
+        {
+            updatedData[j + getIndexOfHighestPriority(rawData)[0] + 1] = rawData[laterPriorities[j]];
+            updatedData[j + getIndexOfHighestPriority(rawData)[0] + 1][2] = currentLatestTime;
+            currentLatestTime = Integer.toString(Integer.parseInt(currentLatestTime) + Integer.parseInt(updatedData[j + getIndexOfHighestPriority(rawData)[0] + 1][1]));
+        }
+        return(gapData(updatedData));
+    }
+
+    boolean furtherTime(String highPrioStart, String earliest, String latest)
+    {
+        int EarlyDiffFromEnd = ((Integer.parseInt(latest.substring(0,2)) * 60) + Integer.parseInt(latest.substring(3,5))) - ((Integer.parseInt(highPrioStart.substring(0,2)) * 60) + Integer.parseInt(highPrioStart.substring(3,5)));
+        int EarlyDiffFromStart = ((Integer.parseInt(highPrioStart.substring(0,2)) * 60) + Integer.parseInt(highPrioStart.substring(3,5))) - ((Integer.parseInt(earliest.substring(0,2)) * 60) + Integer.parseInt(earliest.substring(3,5)));
+        if(EarlyDiffFromEnd <= EarlyDiffFromStart)
+        {
+            return true;
+        }
+        return false;
     }
 
     int getIndexOfPriority(String val)
@@ -94,12 +133,11 @@ public class mainProgram extends JFrame
 
     boolean validateEvent(String[] newEvent)
     {
-        int tempLength;
         if(userName != null)
         {
             try
             {
-                tempLength = Integer.parseInt(userLength);
+                Integer.parseInt(userLength);
             }
             catch(Exception e)
             {
@@ -113,7 +151,7 @@ public class mainProgram extends JFrame
         return true;
     }
 
-    Object[][] gapData(String[][] orderlyData)
+    String[][] gapData(String[][] orderlyData)
     {
         String[][] tempData = new String[(orderlyData.length * 2) - 1][4];
         int highPrioIndex = getIndexOfHighestPriority(orderlyData)[0];
@@ -122,10 +160,10 @@ public class mainProgram extends JFrame
         {
             tempData[i + 1][0] = "Break";
             tempData[i + 1][1] = "10";
-            tempData[i + 1][2] = changeTime(orderlyData[tempIndex][2], (highPrioIndex - tempIndex) * -10);
+            tempData[i + 1][2] = Integer.toString(Integer.parseInt(orderlyData[tempIndex][2]) + (((highPrioIndex - tempIndex) - 1) * -10));
             tempData[i + 1][3] = "0";
             tempData[i] = orderlyData[tempIndex];
-            tempData[i][2] = changeTime(orderlyData[tempIndex - 1][2], (highPrioIndex - tempIndex) * -10);
+            tempData[i][2] = Integer.toString(Integer.parseInt(orderlyData[tempIndex + 1][2]) + ((tempIndex - highPrioIndex) * -10));
             tempIndex = tempIndex - 1;
         }
         tempIndex = highPrioIndex;
@@ -133,10 +171,10 @@ public class mainProgram extends JFrame
         {
             tempData[i - 1][0] = "Break";
             tempData[i - 1][1] = "10";
-            tempData[i - 1][2] = changeTime(orderlyData[tempIndex][2], (tempIndex - highPrioIndex) * 10);
+            tempData[i - 1][2] = Integer.toString(Integer.parseInt(orderlyData[tempIndex][2]) + (((tempIndex - highPrioIndex) - 1) * 10));
             tempData[i - 1][3] = "0";
             tempData[i] = orderlyData[tempIndex];
-            tempData[i][2] = changeTime(orderlyData[tempIndex + 1][2], (tempIndex - highPrioIndex) * 10);
+            tempData[i][2] = Integer.toString(Integer.parseInt(orderlyData[tempIndex + 1][2]) + ((tempIndex - highPrioIndex) * 10));
             tempIndex = tempIndex + 1;
         }
         return tempData;
