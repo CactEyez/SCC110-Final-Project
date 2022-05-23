@@ -68,7 +68,29 @@ public class mainProgram extends JFrame
     {
         String[][] tempData = new String[(orderlyData.length * 2) - 1][4];
         int highPrioIndex = indexOfHighestPriority(orderlyData);
-        return orderedData;
+        int tempIndex = highPrioIndex;
+        for(int i = (highPrioIndex * 2) - 2; i > 0; i = i - 2)
+        {
+            tempData[i + 1][0] = "Break";
+            tempData[i + 1][1] = "N/A";
+            tempData[i + 1][2] = changeTime(orderlyData[tempIndex][2], (highPrioIndex - tempIndex) * -10);
+            tempData[i + 1][3] = "0";
+            tempData[i] = orderlyData[tempIndex];
+            tempData[i][2] = changeTime(orderlyData[tempIndex - 1][2], (highPrioIndex - tempIndex) * -10);
+            tempIndex = tempIndex - 1;
+        }
+        tempIndex = highPrioIndex;
+        for(int i = 0; i < (highPrioIndex * 2) + 2; i++)
+        {
+            tempData[i - 1][0] = "Break";
+            tempData[i - 1][1] = "N/A";
+            tempData[i - 1][2] = changeTime(orderlyData[tempIndex][2], (tempIndex - highPrioIndex) * 10);
+            tempData[i - 1][3] = "0";
+            tempData[i] = orderlyData[tempIndex];
+            tempData[i][2] = changeTime(orderlyData[tempIndex + 1][2], (tempIndex - highPrioIndex) * 10);
+            tempIndex = tempIndex + 1;
+        }
+        return tempData;
     }
 
     String changeTime(String initTime, String timeChange)
